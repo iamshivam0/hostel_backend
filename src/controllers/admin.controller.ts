@@ -448,3 +448,55 @@ export const getleaves = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Failed to fetch leaves" });
   }
 };
+export const getleavesbyId = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ message: "ID parameter is required" });
+    }
+
+    // Find a leave by ID
+    const leave = await Leave.findById(id)
+      .populate("studentId", "firstName lastName email")
+      .populate("parentReview.reviewedBy", "firstName lastName")
+      .populate("staffReview.reviewedBy", "firstName lastName");
+
+    if (!leave) {
+      return res.status(404).json({ message: "Leave not found" });
+    }
+
+    res.json(leave);
+  } catch (error) {
+    console.error("Error fetching leave by ID:", error);
+    res.status(500).json({ message: "Failed to fetch leave" });
+  }
+};
+
+export const deleteleavebyid = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    // console.log(id);
+
+    const leave = await Leave.findOne({ _id: id });
+    // console.log(leave);
+    if (!leave) {
+      return res.status(404).json({
+        success: false,
+        message: "leave not found",
+      });
+    }
+
+    await leave.deleteOne();
+
+    return res.status(200).json({
+      success: true,
+      message: "leave deleted successfully",
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: "Error deleting leave",
+      error: error.message,
+    });
+  }
+}

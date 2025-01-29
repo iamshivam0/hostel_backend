@@ -19,6 +19,8 @@ import {
   getleaves,
   createStaff,
   deleteStaff,
+  getleavesbyId,
+  deleteleavebyid,
 } from "../controllers/admin.controller.js";
 import {
   deleteComplaint,
@@ -88,7 +90,8 @@ router.delete("/delete-staff/:id", deleteStaff);
 //leave management
 
 router.get("/getallleaves", getleaves);
-
+router.get("/getstudentleaveid/:id", getleavesbyId)
+router.delete("/delete-leave/:id", deleteleavebyid);
 //Mess-upload
 
 router.post(
