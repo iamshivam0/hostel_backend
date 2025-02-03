@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import Leave from "./leave.model.js";
+import Complaint from "./complaints.model.js";
 
 export interface IUser extends mongoose.Document {
   email: string;
@@ -11,7 +13,7 @@ export interface IUser extends mongoose.Document {
   parentId?: mongoose.Types.ObjectId;
   children?: mongoose.Types.ObjectId[];
   profilePicUrl?: string; // Optional field for profile picture
-  resetPasswordToken?: string; 
+  resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
@@ -103,6 +105,16 @@ userSchema.pre("save", async function (next) {
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error as Error);
+  }
+});
+userSchema.pre("deleteOne", { document: true, query: false }, async function (next) {
+  try {
+    // 'this' refers to the document (the student) being deleted
+    await Leave.deleteMany({ studentId: this._id });
+    await Complaint.deleteMany({ studentId: this._id });
     next();
   } catch (error) {
     next(error as Error);

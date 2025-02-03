@@ -19,6 +19,12 @@ import {
   getleaves,
   createStaff,
   deleteStaff,
+  editstudent,
+  deleteStudent,
+  getstudentbyid,
+  updatePassword,
+  getstaffbyid,
+  updateStaff,
 } from "../controllers/admin.controller.js";
 import {
   deleteComplaint,
@@ -64,7 +70,6 @@ router.use(authenticateToken, authorizeRoles(["admin"]));
 router.post("/create", createAdmin);
 
 // Parent-Student Management Routes
-router.get("/students", getAllStudents);
 router.get("/parents", getAllParents);
 router.get("/student-parent/:studentId", getStudentParentInfo);
 router.get("/complaints", getComplaints);
@@ -84,6 +89,8 @@ router.delete("/deletecomplaint/:id", deleteComplaint);
 router.get("/getallstaffs", getstaff);
 router.post("/staff-create", createStaff);
 router.delete("/delete-staff/:id", deleteStaff);
+router.get("/staff/:id", getstaffbyid);
+router.put("/staff/edit/:id", updateStaff);
 
 //leave management
 
@@ -119,4 +126,14 @@ router.delete("/delete-announcment/:type/:id", deleteAnnouncement);
 // Route to handle CSV upload and import
 router.post("/import-csv", upload.single("file"), importOrUpdateUsersFromCSV);
 
+
+//student admin routes 
+router.get("/students", getAllStudents);
+router.put("/student/:id", editstudent);
+router.delete("/delete-student/:id", deleteStudent);
+router.get("/student/:id", getstudentbyid);
+
+
+//common 
+router.put("/updatepasswords/:id", updatePassword);
 export default router;

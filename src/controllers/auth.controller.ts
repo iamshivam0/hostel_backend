@@ -11,7 +11,7 @@ import CryptoJS from "crypto-js";
 import dotenv from "dotenv";
 
 dotenv.config();
-const key =process.env.ENCRYPTION_KEY||""; 
+const key = process.env.ENCRYPTION_KEY || "";
 const decryptPassword = (encryptedPassword: string): string => {
 
   const bytes = CryptoJS.AES.decrypt(encryptedPassword, key);
@@ -21,15 +21,15 @@ const decryptPassword = (encryptedPassword: string): string => {
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, Password } = req.body;
-    
-   const password = decryptPassword(Password);
-  
-  //  console.log("this is pass" + password);
+
+    const password = decryptPassword(Password);
+
+    //  console.log("this is pass" + password);
 
     // Find user
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: "Invalid Email" });
+      return res.status(401).json({ message: "Invalid user" });
     }
 
     const isMatch = await user.comparePassword(password);
@@ -101,7 +101,7 @@ export const register = async (req: Request, res: Response) => {
         userData.roomNumber = roomNumber;
         break;
       case "parent":
-        userData.children = []; 
+        userData.children = [];
         // Explicitly set parentId to undefined for parents
         userData.parentId = undefined;
         userData.roomNumber = undefined;

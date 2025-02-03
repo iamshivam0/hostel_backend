@@ -18,10 +18,10 @@ const complaintSchema = new Schema(
     student: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     description: { type: String, required: true },
     status: { type: String, enum: ["Pending", "Resolved"], default: "Pending" },
-    type: { 
-      type: String, 
+    type: {
+      type: String,
       enum: ["Maintenance", "Disciplinary", "Other"], // Add complaint categories
-      required: true 
+      required: true
     },
     studentDetails: {
       firstName: { type: String, required: true },
@@ -31,4 +31,6 @@ const complaintSchema = new Schema(
   { timestamps: true }
 );
 
-export default mongoose.model<IComplaint>("Complaint", complaintSchema);
+const Complaint = mongoose.model("Complaint", complaintSchema);
+
+export default Complaint;

@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import User from "../models/user.model.js";
 import mongoose from "mongoose";
 import Leave from "../models/leave.model.js";
-
+import Complaint from "../models/complaints.model.js";
 export const createAdmin = async (req: Request, res: Response) => {
   try {
     const { email, password, firstName, lastName } = req.body;
@@ -446,5 +446,187 @@ export const getleaves = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error fetching leaves:", error);
     res.status(500).json({ message: "Failed to fetch leaves" });
+  }
+};
+
+
+export const editstudent = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { email, firstName, lastName, roomNumber } = req.body;
+    const parent = await User.findOneAndUpdate(
+      { _id: id, role: "student" },
+      { email, firstName, lastName, roomNumber },
+      { new: true }
+    ).select("-password");
+    const student = await User.findOne({ _id: id, role: "student" });
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "student not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "student updated successfully",
+      data: student,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: "Error creating student",
+      error: error.message,
+    });
+  }
+};
+
+export const deleteStudent = async (req: Request, res: Response) => {
+
+  try {
+    const { id } = req.params;
+    // Leave.findOneAndDelete(id);
+
+    const student = await User.findOne({ _id: id, role: "student" });
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "student not found",
+      });
+    }
+
+    await Leave.deleteMany({ studentId: student._id });
+
+    // Cascade delete: Remove all complaints associated with this student
+    await Complaint.deleteMany({ student: student._id });
+
+    // Now delete the student
+    await student.deleteOne();
+
+    return res.status(200).json({
+      success: true,
+      message: "student deleted successfully",
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: "Error deleting student",
+      error: error.message,
+    });
+  }
+};
+
+export const getstudentbyid = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    // console.log(id);
+
+    const student = await User.findOne({ _id: id });
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "student not found",
+      });
+    }
+
+    // await student.deleteOne();
+
+    return res.status(200).json({
+      student,
+      success: true,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: "Error finding student",
+      error: error.message,
+    });
+  }
+};
+
+export const updatePassword = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params
+    // ;
+    // const id = req.user?._id;
+    if (!id) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const { password: newPassword } = req.body;
+    const users = await User.findById(id);
+
+    if (!users) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    users.password = newPassword;
+    await users.save();
+
+    res.json({ message: "Password updated successfully" });
+
+  } catch (error) {
+    console.error("Error changing password:", error);
+    res.status(500).json({ message: "Failed to change password" });
+  }
+}
+
+export const getstaffbyid = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    // console.log(id);
+
+    const staff = await User.findOne({ _id: id });
+    if (!staff) {
+      return res.status(404).json({
+        success: false,
+        message: "staff not found",
+      });
+    }
+
+    // await student.deleteOne();
+
+    return res.status(200).json({
+      staff,
+      success: true,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: "Error finding staff",
+      error: error.message,
+    });
+  }
+};
+
+export const updateStaff = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { email, firstName, lastName } = req.body;
+    const parent = await User.findOneAndUpdate(
+      { _id: id, role: "staff" },
+      { email, firstName, lastName },
+      { new: true }
+    ).select("-password");
+    const student = await User.findOne({ _id: id, role: "staff" });
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "staff not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "staff updated successfully",
+      data: student,
+    });
+
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: "Error creating staff",
+      error: error.message,
+    });
   }
 };
