@@ -55,14 +55,14 @@ router.get(
 router.get(
   "/leaves/pending",
   authenticateToken,
-  authorizeRoles(["staff"]),
+  authorizeRoles(["staff", "admin"]),
   getPendingLeaves
 );
 
 router.post(
   "/leaves/:leaveId/review",
   authenticateToken,
-  authorizeRoles(["staff"]),
+  authorizeRoles(["staff", "admin"]),
   validateLeaveReview,
   reviewLeave
 );

@@ -19,6 +19,8 @@ import {
   getleaves,
   createStaff,
   deleteStaff,
+  getleavesbyId,
+  deleteleavebyid,
   editstudent,
   deleteStudent,
   getstudentbyid,
@@ -95,7 +97,8 @@ router.put("/staff/edit/:id", updateStaff);
 //leave management
 
 router.get("/getallleaves", getleaves);
-
+router.get("/getstudentleaveid/:id", getleavesbyId)
+router.delete("/delete-leave/:id", deleteleavebyid);
 //Mess-upload
 
 router.post(
