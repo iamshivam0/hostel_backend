@@ -27,6 +27,7 @@ import {
   updatePassword,
   getstaffbyid,
   updateStaff,
+  getParentbyid,
 } from "../controllers/admin.controller.js";
 import {
   deleteComplaint,
@@ -80,7 +81,7 @@ router.get("/complaints", getComplaints);
 router.post("/parent", createParent);
 router.put("/parent/:id", updateParent);
 router.delete("/parent/:id", deleteParent);
-
+router.get("/parent/:id", getParentbyid);
 // Parent-Student Assignment
 router.post("/assign-parent", assignParentToStudent);
 router.delete("/remove-parent/:studentId", removeParentFromStudent);
