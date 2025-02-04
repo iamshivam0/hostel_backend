@@ -681,3 +681,25 @@ export const updateStaff = async (req: Request, res: Response) => {
     });
   }
 };
+export const getParentbyid = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const Parent = await User.findOne({ _id: id });
+    if (!Parent) {
+      return res.status(404).json({
+        success: false,
+        message: "Parent not found",
+      });
+    }
+    return res.status(200).json({
+      Parent,
+      success: true,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: "Error finding Parent",
+      error: error.message,
+    });
+  }
+};
