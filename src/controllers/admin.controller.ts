@@ -703,3 +703,78 @@ export const getParentbyid = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const leaveAdminApprove = async (req: Request, res: Response) => {
+  try {
+    const { leaveId } = req.params;
+    const { action, remarks } = req.body;
+    const adminId = req.user?._id;
+    if (!["approve", "reject"].includes(action)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid action",
+      });
+    }
+    if (!mongoose.Types.ObjectId.isValid(leaveId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid leave ID",
+      });
+    }
+    const leave = await Leave.findById(leaveId);
+    if (!leave) {
+      return res.status(404).json({
+        success: false,
+        message: "Leave not found",
+      });
+    }
+    try {
+      const updatedLeave = await Leave.findOneAndUpdate(
+        { _id: leaveId },
+        {
+          $set: {
+            "staffReview.status":
+              action === "approve" ? "approved" : "rejected",
+            "staffReview.remarks": remarks || "",
+            "staffReview.reviewedBy": new mongoose.Types.ObjectId(adminId),
+            "staffReview.reviewedAt": new Date(),
+            "parentReview.status":
+              action === "approve" ? "approved" : "rejected",
+            "parent.remarks": remarks || "",
+            "parentReview.reviewedBy": new mongoose.Types.ObjectId(adminId),
+            "parentReview.reviewedAt": new Date(),
+          },
+        },
+        {
+          new: true,
+          runValidators: false, // Skip validation for optional fields
+        }
+      )
+        .populate("studentId", "firstName lastName email")
+        .populate("parentReview.reviewedBy", "admin")
+        .populate("staffReview.reviewedBy", "admin");
+      if (!updatedLeave) {
+        throw new Error("Failed to update leave");
+      }
+      return res.status(200).json({
+        success: true,
+        message: `Leave ${action}ed successfully`,
+        leave: updatedLeave,
+      });
+    } catch (saveError) {
+      console.error("Error saving leave:", saveError);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to save leave review",
+        error: saveError instanceof Error ? saveError.message : "Unknown error",
+      });
+    }
+  } catch (error) {
+    console.error("Error reviewing leave:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to review leave",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
