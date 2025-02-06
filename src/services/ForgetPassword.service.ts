@@ -24,7 +24,7 @@ export const generateResetToken = async (email: string) => {
 export const sendResetPasswordEmail = async (email: string) => {
   const { resetToken, user } = await generateResetToken(email);
 
-  const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
+  const resetLink = `https://hostel-frontend-fx5j.vercel.app/reset-password?token=${resetToken}`;
 
   // Email setup
   const transporter = nodemailer.createTransport({
@@ -48,32 +48,31 @@ export const sendResetPasswordEmail = async (email: string) => {
 
 // Reset user password
 export const resetUserPassword = async (token: string, newPassword: string) => {
-    // Find user by token and check if the token is valid (not expired)
-    const user = await User.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpires: { $gt: new Date() },
-    });
-  
-    if (!user) {
-      throw new Error("Invalid or expired token");
-    }
-    
-    
-    // Hash the new password
-    // const salt = await bcrypt.genSalt(10);
-    // user.password = await bcrypt.hash(newPassword, salt);
-    user.password = newPassword; 
-    // console.log("User found:", user);
-    // console.log("New password hash:", user.password);
-    // const isMatch = await user.comparePassword(password);
-    // Clear the reset token and expiration
-    user.resetPasswordToken = "";
-    user.resetPasswordExpires = undefined;
-  
-    // Save the user document with the new password
-    await user.save();
-  
-    // Optionally, log or return confirmation
-    console.log("Password updated successfully.");
-  };
-  
+  // Find user by token and check if the token is valid (not expired)
+  const user = await User.findOne({
+    resetPasswordToken: token,
+    resetPasswordExpires: { $gt: new Date() },
+  });
+
+  if (!user) {
+    throw new Error("Invalid or expired token");
+  }
+
+
+  // Hash the new password
+  // const salt = await bcrypt.genSalt(10);
+  // user.password = await bcrypt.hash(newPassword, salt);
+  user.password = newPassword;
+  // console.log("User found:", user);
+  // console.log("New password hash:", user.password);
+  // const isMatch = await user.comparePassword(password);
+  // Clear the reset token and expiration
+  user.resetPasswordToken = "";
+  user.resetPasswordExpires = undefined;
+
+  // Save the user document with the new password
+  await user.save();
+
+  // Optionally, log or return confirmation
+  console.log("Password updated successfully.");
+};
