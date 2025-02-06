@@ -28,6 +28,7 @@ import {
   getstaffbyid,
   updateStaff,
   getParentbyid,
+  leaveAdminApprove,
 } from "../controllers/admin.controller.js";
 import {
   deleteComplaint,
@@ -100,6 +101,11 @@ router.put("/staff/edit/:id", updateStaff);
 router.get("/getallleaves", getleaves);
 router.get("/getstudentleaveid/:id", getleavesbyId)
 router.delete("/delete-leave/:id", deleteleavebyid);
+router.post(
+  "/leaves/:leaveId/review",
+  authenticateToken,
+  leaveAdminApprove
+);
 //Mess-upload
 
 router.post(
