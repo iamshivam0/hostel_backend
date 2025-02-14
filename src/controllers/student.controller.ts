@@ -108,6 +108,7 @@ export const submitLeave = async (req: Request, res: Response) => {
       contactNumber,
       parentContact,
       address,
+      leaveLocation
     } = req.body;
 
     // Validate dates
@@ -117,6 +118,14 @@ export const submitLeave = async (req: Request, res: Response) => {
       return res.status(400).json({
         message: "End date cannot be before start date",
       });
+    }
+    if (
+      !leaveLocation ||
+      leaveLocation.type !== "Point" ||
+      !Array.isArray(leaveLocation.coordinates) ||
+      leaveLocation.coordinates.length !== 2
+    ) {
+      return res.status(400).json({ message: "Invalid or missing leave location data" });
     }
 
     // Check for overlapping leaves
@@ -146,6 +155,7 @@ export const submitLeave = async (req: Request, res: Response) => {
       contactNumber,
       parentContact,
       address,
+      leaveLocation,
       status: "pending",
     });
 

@@ -12,10 +12,15 @@ export interface IUser extends mongoose.Document {
   roomNumber?: string;
   parentId?: mongoose.Types.ObjectId;
   children?: mongoose.Types.ObjectId[];
-  profilePicUrl?: string; // Optional field for profile picture
+  profilePicUrl?: string;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
+  location?: IGeoLocation;
   comparePassword(candidatePassword: string): Promise<boolean>;
+}
+interface IGeoLocation {
+  type: "Point";
+  coordinates: number[];
 }
 
 const userSchema = new mongoose.Schema(
@@ -91,12 +96,36 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null, // Default to null if no expiration is set
     },
+    location: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number],
+        // Require location only if the role is "student" or "parent"
+        required: function (this: IUser) {
+          return this.role === "student" || this.role === "parent";
+        },
+        // Validate that coordinates is an array of two numbers: [longitude, latitude]
+        validate: {
+          validator: function (val: number[]) {
+            return Array.isArray(val) && val.length === 2;
+          },
+          message:
+            "Coordinates must be an array of two numbers [longitude, latitude]",
+        },
+      },
+    },
   },
+
   {
     timestamps: true,
   }
 );
 
+userSchema.index({ location: "2dsphere" });
 
 // Hash password before saving
 userSchema.pre("save", async function (next) {
