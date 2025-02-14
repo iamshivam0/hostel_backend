@@ -3,7 +3,6 @@ import User, { IUser } from "../models/user.model.js";
 import Leave from "../models/leave.model.js";
 import mongoose from "mongoose";
 
-// Add type for the authenticated request
 interface AuthRequest extends Request {
   user?: {
     _id: string;
@@ -19,11 +18,10 @@ function deg2rad(deg: number): number {
   return deg * (Math.PI / 180);
 }
 
-// Helper function: Calculate the distance (in kilometers) between two coordinates using the Haversine formula
 function calculateDistance(coords1: number[], coords2: number[]): number {
   const [lon1, lat1] = coords1;
   const [lon2, lat2] = coords2;
-  const R = 6371; // Radius of the Earth in kilometers
+  const R = 6371;
   const dLat = deg2rad(lat2 - lat1);
   const dLon = deg2rad(lon2 - lon1);
   const a =
@@ -131,10 +129,7 @@ export const getChildLeaves = async (req: AuthRequest, res: Response) => {
       _id: { $in: parent.children },
       role: "student",
     });
-
-    if (!children.length) {
-      return res.status(404).json({ message: "No children found" });
-    }
+    // console.log(children.length);
 
     // Get leaves for all children
     const leaves = await Leave.find({
@@ -145,7 +140,10 @@ export const getChildLeaves = async (req: AuthRequest, res: Response) => {
       .populate("parentReview.reviewedBy", "firstName lastName")
       .populate("staffReview.reviewedBy", "firstName lastName");
 
-    res.status(200).json(leaves);
+    res.status(200).json({
+      leaves,
+      count: leaves.length
+    });
   } catch (error) {
     console.error("Error in getChildLeaves:", error);
     res.status(500).json({ message: "Internal server error" });
