@@ -8,8 +8,33 @@ interface AuthRequest extends Request {
   user?: {
     _id: string;
     role: string;
+    location?: IGeoLocation;
   };
 }
+interface IGeoLocation {
+  type: "Point";
+  coordinates: number[];
+}
+function deg2rad(deg: number): number {
+  return deg * (Math.PI / 180);
+}
+
+// Helper function: Calculate the distance (in kilometers) between two coordinates using the Haversine formula
+function calculateDistance(coords1: number[], coords2: number[]): number {
+  const [lon1, lat1] = coords1;
+  const [lon2, lat2] = coords2;
+  const R = 6371; // Radius of the Earth in kilometers
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(deg2rad(lat1)) *
+    Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 
 export const getChildStats = async (req: AuthRequest, res: Response) => {
   try {
@@ -223,7 +248,7 @@ export const updateParentProfile = async (req: AuthRequest, res: Response) => {
 export const reviewLeave = async (req: AuthRequest, res: Response) => {
   try {
     const { leaveId } = req.params;
-    const { action, remarks } = req.body;
+    const { action, remarks, currentParentLocation } = req.body;
     const parentId = req.user?._id;
 
     if (!parentId) {
@@ -234,7 +259,6 @@ export const reviewLeave = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: "Invalid action" });
     }
 
-    // Find the leave and verify it belongs to parent's child
     const parent = await User.findOne({ _id: parentId, role: "parent" });
     if (!parent) {
       return res.status(404).json({ message: "Parent not found" });
@@ -250,12 +274,50 @@ export const reviewLeave = async (req: AuthRequest, res: Response) => {
         .status(404)
         .json({ message: "Leave not found or unauthorized" });
     }
+    if (
+      !currentParentLocation ||
+      typeof currentParentLocation !== "object" ||
+      !("coordinates" in currentParentLocation) ||
+      !Array.isArray(currentParentLocation.coordinates) ||
+      currentParentLocation.coordinates.length !== 2
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Real-time parent location data is missing or invalid" });
+    }
+    const parentRealTimeLocation = currentParentLocation as IGeoLocation;
+    if (
+      !leave.leaveLocation ||
+      typeof leave.leaveLocation !== "object" ||
+      !("coordinates" in leave.leaveLocation)
+    ) {
+      return res.status(400).json({ message: "Leave location data is missing or invalid" });
+    }
 
+    const leaveLocation = leave.leaveLocation as IGeoLocation;
+
+    if (!Array.isArray(leaveLocation.coordinates) || leaveLocation.coordinates.length !== 2) {
+      return res.status(400).json({ message: "Leave location coordinates are missing or invalid" });
+    }
+
+
+    const distance = calculateDistance(
+      parentRealTimeLocation.coordinates,
+      leaveLocation.coordinates
+    );
+    const restrictedRadius = 5;
+
+    if (distance < restrictedRadius && action === "approve") {
+      return res.status(400).json({
+        message:
+          "Approval not allowed. Parent is within the restricted radius of the leave location.",
+      });
+    }
     if (leave.status !== "pending") {
       return res.status(400).json({ message: "Leave already reviewed" });
     }
 
-    // Update parent review status with converted ObjectId
+
     leave.parentReview = {
       status: action === "approve" ? "approved" : "rejected",
       remarks: remarks,
@@ -263,16 +325,19 @@ export const reviewLeave = async (req: AuthRequest, res: Response) => {
       reviewedAt: new Date(),
     };
 
-    // Only update the final status if both parent and staff have approved
     if (leave.staffReview?.status === "approved" && action === "approve") {
       leave.status = "approved";
     } else if (action === "reject") {
       leave.status = "rejected";
     } else {
-      leave.status = "pending"; // Keep pending if waiting for other approval
+      leave.status = "pending";
     }
 
     await leave.save();
+    if (leave.status === "approved" || leave.status === "rejected") {
+      leave.leaveLocation = undefined;
+      await leave.save();
+    }
 
     res.json({ message: `Leave ${action}ed by parent`, leave });
   } catch (error) {

@@ -20,6 +20,7 @@ const reviewSchema = new mongoose.Schema({
   },
 });
 
+// Define the leave schema with a GeoJSON location
 const leaveSchema = new mongoose.Schema(
   {
     studentId: {
@@ -62,9 +63,25 @@ const leaveSchema = new mongoose.Schema(
     },
     parentReview: reviewSchema,
     staffReview: reviewSchema,
+
+    leaveLocation: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number],
+        required: function (this: { status: string }) {
+          return this.status === "pending";
+        }
+      },
+    },
   },
   { timestamps: true }
 );
+
+leaveSchema.index({ leaveLocation: "2dsphere" });
 
 const Leave = mongoose.model("Leave", leaveSchema);
 
