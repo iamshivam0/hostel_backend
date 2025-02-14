@@ -100,15 +100,11 @@ const userSchema = new mongoose.Schema(
       type: {
         type: String,
         enum: ["Point"],
-        default: "Point",
+        // default: "Point",
       },
       coordinates: {
         type: [Number],
-        // Require location only if the role is "student" or "parent"
-        required: function (this: IUser) {
-          return this.role === "student" || this.role === "parent";
-        },
-        // Validate that coordinates is an array of two numbers: [longitude, latitude]
+
         validate: {
           validator: function (val: number[]) {
             return Array.isArray(val) && val.length === 2;

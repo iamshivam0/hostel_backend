@@ -24,7 +24,7 @@ export const generateResetToken = async (email: string) => {
 export const sendResetPasswordEmail = async (email: string) => {
   const { resetToken, user } = await generateResetToken(email);
 
-  const resetLink = `https://hostel-frontend-fx5j.vercel.app/reset-password?token=${resetToken}`;
+  const resetLink = `${process.env.FRONTEND_LINK}/reset-password?token=${resetToken}`;
 
   // Email setup
   const transporter = nodemailer.createTransport({
