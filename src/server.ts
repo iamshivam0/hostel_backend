@@ -66,7 +66,7 @@ app.use(
     res: express.Response,
     next: express.NextFunction
   ) => {
-    console.error(err.stack);
+    console.error(err);
     res.status(500).json({ message: "Something went wrong!" });
   }
 );
