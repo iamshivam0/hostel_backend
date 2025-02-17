@@ -316,7 +316,7 @@ export const getStudentRoomates = async (req: Request, res: Response) => {
 };
 
 export const uploadProfilePicture = async (req: Request, res: Response) => {
-  const userId = req.user?._id;
+  const userId = req.user?._id; // Assuming authentication middleware adds `req.user`
 
   if (!userId || !req.file) {
     return res.status(400).json({ error: "User ID and file are required" });
@@ -325,19 +325,27 @@ export const uploadProfilePicture = async (req: Request, res: Response) => {
   try {
 
     const timestamp = Math.floor(Date.now() / 1000);
+    console.log(timestamp);
+
+    const fileNameWithoutExt = req.file.originalname.split('.')[0];
+    const public_id = `${Date.now()}-${fileNameWithoutExt}`;
 
     const paramsToSign = {
       folder: "profile_pics",
+      public_id,
       timestamp,
     };
+
 
     const signature = cloudinary.utils.api_sign_request(
       paramsToSign,
       process.env.CLOUDINARY_API_SECRET as string
     );
+    console.log(signature);
 
     const result = await cloudinary.uploader.upload(req.file.path, {
       folder: "profile_pics",
+      public_id,
       timestamp,
       signature,
       api_key: process.env.CLOUDINARY_API_KEY,
@@ -345,11 +353,9 @@ export const uploadProfilePicture = async (req: Request, res: Response) => {
 
 
     const updatedUser = await updateProfilePic(userId, result.secure_url);
-
     if (!updatedUser) {
       return res.status(404).json({ error: "User not found" });
     }
-
     res.status(200).json({
       message: "Profile picture updated successfully",
       profilePicUrl: result.secure_url,
