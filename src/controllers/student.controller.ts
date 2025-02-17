@@ -316,19 +316,34 @@ export const getStudentRoomates = async (req: Request, res: Response) => {
 };
 
 export const uploadProfilePicture = async (req: Request, res: Response) => {
-  const userId = req.user?._id; // Assuming authentication middleware adds `req.user`
+  const userId = req.user?._id;
 
   if (!userId || !req.file) {
     return res.status(400).json({ error: "User ID and file are required" });
   }
-  // console.log(userId)
+
   try {
-    // Upload file to Cloudinary
+
+    const timestamp = Math.floor(Date.now() / 1000);
+
+    const paramsToSign = {
+      folder: "profile_pics",
+      timestamp,
+    };
+
+    const signature = cloudinary.utils.api_sign_request(
+      paramsToSign,
+      process.env.CLOUDINARY_API_SECRET as string
+    );
+
     const result = await cloudinary.uploader.upload(req.file.path, {
       folder: "profile_pics",
+      timestamp,
+      signature,
+      api_key: process.env.CLOUDINARY_API_KEY,
     });
 
-    // Update user's profile picture in the database
+
     const updatedUser = await updateProfilePic(userId, result.secure_url);
 
     if (!updatedUser) {
