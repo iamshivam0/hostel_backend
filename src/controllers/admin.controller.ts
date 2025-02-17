@@ -707,7 +707,7 @@ export const getParentbyid = async (req: Request, res: Response) => {
 export const leaveAdminApprove = async (req: Request, res: Response) => {
   try {
     const { leaveId } = req.params;
-    const { action, remarks } = req.body;
+    const { action } = req.body;
     const adminId = req.user?._id;
     if (!["approve", "reject"].includes(action)) {
       return res.status(400).json({
@@ -733,14 +733,15 @@ export const leaveAdminApprove = async (req: Request, res: Response) => {
         { _id: leaveId },
         {
           $set: {
+            status: action === "approve" ? "approved" : "rejected",
             "staffReview.status":
               action === "approve" ? "approved" : "rejected",
-            "staffReview.remarks": remarks || "",
+            "staffReview.remarks": "Approved by admin",
             "staffReview.reviewedBy": new mongoose.Types.ObjectId(adminId),
             "staffReview.reviewedAt": new Date(),
             "parentReview.status":
               action === "approve" ? "approved" : "rejected",
-            "parent.remarks": remarks || "",
+            "parentReview.remarks": "Approved by admin",
             "parentReview.reviewedBy": new mongoose.Types.ObjectId(adminId),
             "parentReview.reviewedAt": new Date(),
           },

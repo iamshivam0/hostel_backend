@@ -65,7 +65,7 @@ export const login = async (req: Request, res: Response) => {
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password, firstName, lastName, role, roomNumber, children } =
+    const { email, password, firstName, lastName, role, roomNumber, children, location } =
       req.body;
 
     // Check if user exists
@@ -89,7 +89,12 @@ export const register = async (req: Request, res: Response) => {
       lastName,
       role,
     };
-
+    if (location && location.type === "Point" && Array.isArray(location.coordinates) && location.coordinates.length === 2) {
+      userData.location = location;
+    } else {
+      userData.location = undefined;
+      // location.type === "Point"
+    }
     // Add role-specific fields ONLY
     switch (role) {
       case "student":
@@ -111,6 +116,9 @@ export const register = async (req: Request, res: Response) => {
         userData.children = undefined;
         userData.parentId = undefined;
         userData.roomNumber = undefined;
+        break;
+        userData.location = undefined;
+      // location.type = "Point";
     }
 
     const user = new User(userData);
@@ -155,7 +163,7 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
     const { resetToken, user } = await generateResetToken(email);
-    const resetLink = `https://hostel-frontend-fx5j.vercel.app/reset-password?token=${resetToken}`;
+    const resetLink = `${process.env.FRONTEND_LINK}/reset-password?token=${resetToken}`;
     await sendResetPasswordEmail(user.email);
     res.status(200).json({ message: "Password reset email sent" });
   } catch (error: any) {
