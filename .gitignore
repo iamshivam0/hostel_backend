@@ -18,7 +18,8 @@ build/
 # Temp uploads (deleted after S3 upload or on failure)
 uploads/
 
-*.json
+
+nivas-c9c18-firebase-adminsdk-fbsvc-d021516b2c.json
 
 # Dependency directories
 jspm_packages/
